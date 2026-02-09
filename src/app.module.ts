@@ -3,27 +3,26 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule,UsersModule],
+      imports: [ConfigModule],
+      inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        url: configService.get('DATABASE_URL'),
+        url:
+          configService.get<string>('DATABASE_URL') ||
+          configService.get<string>('database_public_variable'), // fallback to Railway variable
         autoLoadEntities: true,
-        synchronize: true, 
-        ssl: process.env.NODE_ENV === 'production' 
-          ? { rejectUnauthorized: false } 
-          : false,
+        synchronize: true, // only for development; disable in production if needed
+        ssl:
+          process.env.NODE_ENV === 'production'
+            ? { rejectUnauthorized: false } // required for Railway
+            : false,
       }),
-      inject: [ConfigService],
     }),
-    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
