@@ -12,10 +12,10 @@ import { AppService } from './app.service';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        url: configService.get<string>('database_public_variable'), // Railway variable
+        url: configService.get<string>('DATABASE_URL'), // Must match Railway variable
         autoLoadEntities: true,
         synchronize: true,
-        ssl: { rejectUnauthorized: false }, // required by Railway
+        ssl: { rejectUnauthorized: false }, // Required for Railway PostgreSQL
       }),
     }),
   ],
