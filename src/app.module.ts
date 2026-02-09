@@ -3,25 +3,25 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { UsersModule } from './users/users.module'; // <-- add this
 
 @Module({
   imports: [
-    // Load environment variables from Railway (no local .env needed)
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
-    // Configure TypeORM to connect to Railway PostgreSQL
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        url: configService.get<string>('DATABASE_URL'), // Must match Railway variable
-        autoLoadEntities: true, // Automatically load entities
-        synchronize: true,       // Only for development; set false in production
-        ssl: { rejectUnauthorized: false }, // Required for Railway PostgreSQL
+        url: configService.get<string>('DATABASE_URL'),
+        autoLoadEntities: true,
+        synchronize: true,
+        ssl: process.env.NODE_ENV === 'production'
+          ? { rejectUnauthorized: false }
+          : false,
       }),
     }),
+    UsersModule, // <-- add this
   ],
   controllers: [AppController],
   providers: [AppService],
