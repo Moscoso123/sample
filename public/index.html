@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Users Frontend</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, button { margin: 5px; }
+    li { margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Users</h1>
+
+  <ul id="users-list"></ul>
+
+  <h2>Add User</h2>
+  <input type="text" id="name" placeholder="Name" />
+  <input type="email" id="email" placeholder="Email" />
+  <button id="add-user">Add User</button>
+
+  <script>
+    const API_URL = 'https://nestjsproject-production-a5a6.up.railway.app/users'; // change to localhost if needed
+
+    // Fetch and display users
+    async function fetchUsers() {
+      const res = await fetch(API_URL);
+      const users = await res.json();
+      const list = document.getElementById('users-list');
+      list.innerHTML = '';
+      users.forEach(user => {
+        const li = document.createElement('li');
+        li.textContent = `${user.name} (${user.email})`;
+        
+        // Delete button
+        const del = document.createElement('button');
+        del.textContent = 'Delete';
+        del.onclick = async () => {
+          await fetch(`${API_URL}/${user.id}`, { method: 'DELETE' });
+          fetchUsers();
+        };
+        li.appendChild(del);
+
+        list.appendChild(li);
+      });
+    }
+
+    // Add user
+    document.getElementById('add-user').onclick = async () => {
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+
+      if (!name || !email) {
+        alert('Name and email required');
+        return;
+      }
+
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email })
+      });
+
+      document.getElementById('name').value = '';
+      document.getElementById('email').value = '';
+      fetchUsers();
+    };
+
+    // Initial load
+    fetchUsers();
+  </script>
+</body>
+</html>
