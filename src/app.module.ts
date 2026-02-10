@@ -1,21 +1,22 @@
+// app.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
+
+console.log('MYSQL_PUBLIC_URL:', process.env.MYSQL_PUBLIC_URL); // DEBUG: remove after confirmed
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: process.env.MYSQL_HOST,
-      port: Number(process.env.MYSQL_PORT),
-      username: process.env.MYSQL_USER,
-      password: process.env.MYSQL_PASSWORD,
-      database: process.env.MYSQL_DB,
+      url: process.env.MYSQL_PUBLIC_URL, // Railway full DB connection string
       autoLoadEntities: true,
-      synchronize: process.env.NODE_ENV !== 'production',
-      ssl: false, // Railway internal network
+      synchronize: process.env.NODE_ENV !== 'production', // false in production
+      ssl: false, // Railway internal connection does not require SSL
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
@@ -23,5 +24,7 @@ import { UsersModule } from './users/users.module';
     }),
     UsersModule,
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
