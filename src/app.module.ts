@@ -62,7 +62,7 @@ import { UsersModule } from './users/users.module';
           port: 3306,
           username: 'root',
           password: 'iqFsnTTsFJGzvQbsqeHkOJszMWBbpLLD',
-          database: 'test',
+          database: 'railway',
           autoLoadEntities: true,
           synchronize: true,
           ssl: false,
