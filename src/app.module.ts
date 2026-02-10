@@ -14,19 +14,26 @@ import { UsersModule } from './users/users.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        url: configService.get<string>('DATABASE_URL'),
+        type: 'mysql',
+        host: configService.get<string>('DB_HOST', 'localhost'),
+        port: configService.get<number>('DB_PORT', 3306),
+        username: configService.get<string>('DB_USERNAME', 'root'),
+        password: configService.get<string>('DB_PASSWORD', ''),
+        database: configService.get<string>('DB_DATABASE', 'test'),
         autoLoadEntities: true,
-        synchronize: true,
-        ssl:
-          process.env.NODE_ENV === 'production'
-            ? { rejectUnauthorized: false }
-            : false,
+        synchronize: configService.get<boolean>('DB_SYNCHRONIZE', true), // Be careful with this in production!
+        // MySQL specific options
+        charset: 'utf8mb4',
+        timezone: 'Z',
+        // SSL configuration for Railway/cloud
+        ssl: process.env.NODE_ENV === 'production' ? 
+          { rejectUnauthorized: false } : 
+          false,
       }),
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'), // <--- serve from 'nestjs/public'
-      serveRoot: '/', // root path for static files
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/',
     }),
     UsersModule,
   ],
