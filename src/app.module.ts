@@ -14,58 +14,35 @@ import { UsersModule } from './users/users.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const nodeEnv = config.get('NODE_ENV');
-        console.log(`NODE_ENV: ${nodeEnv}`);
+        const nodeEnv = config.get('NODE_ENV') || 'production';
+        console.log('=== CONFIG DEBUG ===');
+        console.log('NODE_ENV:', nodeEnv);
+        console.log('MYSQLPASSWORD exists?:', !!process.env.MYSQLPASSWORD);
+        console.log('All MySQL env vars:', {
+          MYSQLHOST: process.env.MYSQLHOST,
+          MYSQLPORT: process.env.MYSQLPORT,
+          MYSQLUSER: process.env.MYSQLUSER,
+          MYSQLPASSWORD: process.env.MYSQLPASSWORD ? 'SET' : 'NOT SET',
+          MYSQLDATABASE: process.env.MYSQLDATABASE,
+        });
+        console.log('====================');
         
-        // OPTION 1: Try INTERNAL Railway network (MOST RELIABLE)
-        if (nodeEnv === 'production') {
-          return {
-            type: 'mysql',
-            host: 'mysql.railway.internal', // ← INTERNAL hostname
-            port: 3306, // ← DEFAULT MySQL port
-            username: config.get('MYSQLUSER') || 'root',
-            password: config.get('MYSQLPASSWORD'),
-            database: config.get('MYSQLDATABASE') || 'railway',
-            autoLoadEntities: true,
-            synchronize: false, // ← FALSE for production
-            ssl: false, // ← NO SSL for internal
-            extra: {
-              connectionLimit: 10,
-            },
-          };
-        }
-        
-        // OPTION 2: Use Railway's provided variables (Public)
-        const mysqlHost = config.get('MYSQLHOST');
-        if (mysqlHost && mysqlHost.includes('railway.app')) {
-          return {
-            type: 'mysql',
-            host: mysqlHost,
-            port: config.get('MYSQLPORT') || 3306,
-            username: config.get('MYSQLUSER') || 'root',
-            password: config.get('MYSQLPASSWORD'),
-            database: config.get('MYSQLDATABASE') || 'railway',
-            autoLoadEntities: true,
-            synchronize: false,
-            ssl: { rejectUnauthorized: false }, // ← SSL for public
-            extra: {
-              ssl: { rejectUnauthorized: false },
-              connectionLimit: 10,
-            },
-          };
-        }
-        
-        // OPTION 3: Local development
+        // For Railway Production - Use ALL credentials from environment
         return {
           type: 'mysql',
-          host: 'localhost',
-          port: 3306,
-          username: 'root',
-          password: 'XcPxQFeTIPHpFRsrCwgiuinpZpChiFfh',
-          database: 'railway',
+          // Use EXACTLY what Railway provides
+          host: process.env.MYSQLHOST || 'mysql.railway.internal',
+          port: parseInt(process.env.MYSQLPORT || '3306'),
+          username: process.env.MYSQLUSER || 'root',
+          password: process.env.MYSQLPASSWORD || '', // THIS MUST BE SET!
+          database: process.env.MYSQLDATABASE || 'railway',
           autoLoadEntities: true,
-          synchronize: true,
-          ssl: false,
+          synchronize: nodeEnv !== 'production', // false for production
+          ssl: nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
+          extra: {
+            connectionLimit: 10,
+            connectTimeout: 60000,
+          },
         };
       },
     }),
