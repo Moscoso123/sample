@@ -10,11 +10,12 @@ import { UsersModule } from './users/users.module';
   imports: [
     TypeOrmModule.forRoot({
       type: 'mysql',
-      // Railway gives you MYSQL_URL - USE IT!
-      url: process.env.MYSQL_URL,
+      // Use the PUBLIC URL from Railway
+      url: process.env.MYSQL_PUBLIC_URL,
       autoLoadEntities: true,
       synchronize: process.env.NODE_ENV !== 'production', // false in production
-      ssl: false, // Railway internal network
+      // Public connection requires SSL
+      ssl: { rejectUnauthorized: false },
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
