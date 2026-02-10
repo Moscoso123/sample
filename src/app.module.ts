@@ -13,22 +13,23 @@ import { UsersModule } from './users/users.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
+      useFactory: (config: ConfigService) => ({
         type: 'mysql',
-        host: configService.get<string>('DB_HOST', 'localhost'),
-        port: configService.get<number>('DB_PORT', 3306),
-        username: configService.get<string>('DB_USERNAME', 'root'),
-        password: configService.get<string>('DB_PASSWORD', ''),
-        database: configService.get<string>('DB_DATABASE', 'test'),
+        host: config.get('MYSQLHOST') || 'localhost',
+        port: config.get('MYSQLPORT') || 3306,
+        username: config.get('MYSQLUSER') || 'root',
+        password: config.get('MYSQLPASSWORD') || '',
+        database: config.get('MYSQLDATABASE') || 'test',
         autoLoadEntities: true,
-        synchronize: configService.get<boolean>('DB_SYNCHRONIZE', true), // Be careful with this in production!
-        // MySQL specific options
-        charset: 'utf8mb4',
-        timezone: 'Z',
-        // SSL configuration for Railway/cloud
-        ssl: process.env.NODE_ENV === 'production' ? 
-          { rejectUnauthorized: false } : 
-          false,
+        synchronize: config.get('NODE_ENV') !== 'production',
+        ssl: config.get('NODE_ENV') === 'production' 
+          ? { rejectUnauthorized: false } 
+          : false,
+        // Add these for better connection
+        extra: {
+          connectionLimit: 10,
+          connectTimeout: 60000,
+        },
       }),
     }),
     ServeStaticModule.forRoot({
