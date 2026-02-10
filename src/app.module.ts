@@ -14,59 +14,58 @@ import { UsersModule } from './users/users.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        // Debug: Check what Railway is providing
-        console.log('=== MySQL Configuration ===');
-        console.log('MYSQLHOST:', config.get('MYSQLHOST'));
-        console.log('MYSQLPORT:', config.get('MYSQLPORT'));
-        console.log('MYSQLUSER:', config.get('MYSQLUSER'));
-        console.log('MYSQLDATABASE:', config.get('MYSQLDATABASE'));
-        console.log('NODE_ENV:', config.get('NODE_ENV'));
-        console.log('==========================');
-
-        // Try DATABASE_URL if MYSQLHOST doesn't work
-        const databaseUrl = config.get('DATABASE_URL');
-        if (databaseUrl && databaseUrl.includes('mysql://')) {
-          try {
-            // Parse MySQL URL format: mysql://user:pass@host:port/db
-            const url = new URL(databaseUrl);
-            return {
-              type: 'mysql',
-              host: url.hostname,
-              port: parseInt(url.port) || 3306,
-              username: decodeURIComponent(url.username),
-              password: decodeURIComponent(url.password),
-              database: url.pathname.substring(1),
-              autoLoadEntities: true,
-              synchronize: config.get('NODE_ENV') !== 'production',
-              ssl: { rejectUnauthorized: false },
-              extra: {
-                connectionLimit: 10,
-                connectTimeout: 60000,
-              },
-            };
-          } catch (error) {
-            console.error('Failed to parse DATABASE_URL:', error);
-          }
+        const nodeEnv = config.get('NODE_ENV');
+        console.log(`NODE_ENV: ${nodeEnv}`);
+        
+        // OPTION 1: Try INTERNAL Railway network (MOST RELIABLE)
+        if (nodeEnv === 'production') {
+          return {
+            type: 'mysql',
+            host: 'mysql.railway.internal', // ← INTERNAL hostname
+            port: 3306, // ← DEFAULT MySQL port
+            username: config.get('MYSQLUSER') || 'root',
+            password: config.get('MYSQLPASSWORD'),
+            database: config.get('MYSQLDATABASE') || 'railway',
+            autoLoadEntities: true,
+            synchronize: false, // ← FALSE for production
+            ssl: false, // ← NO SSL for internal
+            extra: {
+              connectionLimit: 10,
+            },
+          };
         }
-
-        // Default: Use Railway's standard MySQL variables
+        
+        // OPTION 2: Use Railway's provided variables (Public)
+        const mysqlHost = config.get('MYSQLHOST');
+        if (mysqlHost && mysqlHost.includes('railway.app')) {
+          return {
+            type: 'mysql',
+            host: mysqlHost,
+            port: config.get('MYSQLPORT') || 3306,
+            username: config.get('MYSQLUSER') || 'root',
+            password: config.get('MYSQLPASSWORD'),
+            database: config.get('MYSQLDATABASE') || 'railway',
+            autoLoadEntities: true,
+            synchronize: false,
+            ssl: { rejectUnauthorized: false }, // ← SSL for public
+            extra: {
+              ssl: { rejectUnauthorized: false },
+              connectionLimit: 10,
+            },
+          };
+        }
+        
+        // OPTION 3: Local development
         return {
           type: 'mysql',
-          host: config.get('MYSQLHOST') || 'localhost',
-          port: config.get('MYSQLPORT') || 3306,
-          username: config.get('MYSQLUSER') || 'root',
-          password: config.get('MYSQLPASSWORD') || '',
-          database: config.get('MYSQLDATABASE') || 'railway',
+          host: 'localhost',
+          port: 3306,
+          username: 'root',
+          password: '',
+          database: 'test',
           autoLoadEntities: true,
-          synchronize: config.get('NODE_ENV') !== 'production',
-          // Railway MySQL requires SSL for public connections
-          ssl: config.get('NODE_ENV') === 'production' 
-            ? { rejectUnauthorized: false } 
-            : false,
-          extra: {
-            connectionLimit: 10,
-            connectTimeout: 60000,
-          },
+          synchronize: true,
+          ssl: false,
         };
       },
     }),
