@@ -1,9 +1,25 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [],
+  imports: [
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      url: process.env.MYSQL_URL, // ✅ MUST use internal Railway URL
+      autoLoadEntities: true,
+      synchronize: true, // ✅ enable for now (creates tables) sefs
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/',
+    }),
+    UsersModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
