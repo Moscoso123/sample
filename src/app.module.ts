@@ -10,7 +10,7 @@ import { UsersModule } from './users/users.module';
   imports: [
     TypeOrmModule.forRoot({
       type: 'mysql',
-      url: process.env.MYSQL_PUBLIC_URL, // ONLY this
+      url: process.env.MYSQL_PUBLIC_URL, // ← ONLY this
       autoLoadEntities: true,
       synchronize: process.env.NODE_ENV !== 'production',
       ssl: false, // Railway internal network doesn't need SSL
