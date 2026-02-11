@@ -1,4 +1,3 @@
-// app.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -11,10 +10,10 @@ import { UsersModule } from './users/users.module';
   imports: [
     TypeOrmModule.forRoot({
       type: 'mysql',
-      url: process.env.MYSQL_PUBLIC_URL, // Uses only the public URL
+      url: process.env.MYSQL_PUBLIC_URL, // ONLY this
       autoLoadEntities: true,
-      synchronize: process.env.NODE_ENV !== 'production', // false in production
-      ssl: false, // Railway internal network does not need SSL
+      synchronize: process.env.NODE_ENV !== 'production',
+      ssl: false, // Railway internal network doesn't need SSL
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
