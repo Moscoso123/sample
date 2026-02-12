@@ -10,9 +10,9 @@ import { UsersModule } from './users/users.module';
   imports: [
     TypeOrmModule.forRoot({
       type: 'mysql',
-      url: process.env.MYSQL_URL, // ✅ MUST use internal Railway URL
+      url: process.env.MYSQL_URL, 
       autoLoadEntities: true,
-      synchronize: true, // ✅ enable for now (creates tables)
+      synchronize: true, 
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
